@@ -7,13 +7,18 @@ import org.activiti.engine.*;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("activiti")
@@ -42,6 +47,40 @@ public class ActivitiController {
         ProcessEngine engine = processEngine.getProcessEngineConfiguration().buildProcessEngine();
         Deployment deployment = repositoryService.createDeployment().addClasspathResource("diagrams/MyProcess1.bpmn").addClasspathResource("diagrams/MyProcess1.png").deploy();
         return ResultUtil.success("部署名称:" + deployment.getName());
+    }
+
+    //查看流程图，根据部署记录ACT_GE_BYTEARRAY的DEPLOYMENT_ID_
+    @GetMapping("/viewPic/{deployId}")
+    public void viewPic(@PathVariable("deployId") String deployId, HttpServletResponse response) throws IOException {
+        String resouceName = "";
+
+        //获取ACT_GE_BYTEARRAY里部署的流程定义的png图片资源
+        List<String> resouceNameList = repositoryService.getDeploymentResourceNames(deployId).stream().map(e -> {
+            if (e.indexOf(".png") > 0) {
+                return e;
+            } else {
+                return null;
+            }
+        }).collect(Collectors.toList());
+        if (resouceNameList != null) {
+            resouceName = resouceNameList.get(1);
+        }
+
+        //写文件
+        InputStream is = repositoryService.getResourceAsStream(deployId, resouceName);
+        File file = new File("./" + resouceName);
+        FileUtils.copyInputStreamToFile(is, file);
+
+        //传到前台
+        FileInputStream fis = new FileInputStream(file);
+        int i = fis.available();
+        byte data[] = new byte[i];
+        fis.read(data);
+        OutputStream toClient = response.getOutputStream();
+        toClient.write(data);
+        toClient.flush();
+        toClient.close();
+        fis.close();
     }
 
     //启动流程实例，参数myProcess=myProcess1
