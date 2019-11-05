@@ -1,0 +1,10 @@
+server:
+  port: 4321
+spring:
+  application:
+    name: activiti
+  profiles:
+    active: dev
+
+mybatis:
+  mapper-locations: classpath*:/mapper/**Mapper.xml
