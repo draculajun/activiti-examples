@@ -76,5 +76,14 @@ public class ActivitiController {
         }
     }
 
+    //完成我的任务，参数taskId为findMyPersonalTask接口查询返回的
+    // ACT_RU_TASK(当前任务);
+    @GetMapping("/completeMyPersonalTask/{taskId}")
+    public Result completeMyPersonalTask(@PathVariable("taskId") String taskId) {
+        taskService.complete(taskId);
+        return ResultUtil.success("任务完成:" + taskId);
+    }
+
+
 
 }
