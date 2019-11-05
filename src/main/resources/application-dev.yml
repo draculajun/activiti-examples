@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    jdbc-url: jdbc:mysql://172.16.0.180:3306/register?characterEncoding=UTF-8&useSSL=true
+    jdbc-url: jdbc:mysql://172.16.0.180:3306/register?characterEncoding=UTF-8&useSSL=true&serverTimezone=GMT%2b8
     username: register
     password: register123
 
