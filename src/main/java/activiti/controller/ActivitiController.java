@@ -6,19 +6,20 @@ import activiti.pojo.ResultUtil;
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 
 @RestController
 @RequestMapping("activiti")
@@ -50,6 +51,28 @@ public class ActivitiController {
         ProcessEngine engine = processEngine.getProcessEngineConfiguration().buildProcessEngine();
         Deployment deployment = repositoryService.createDeployment().addClasspathResource("diagrams/MyProcess1.bpmn").addClasspathResource("diagrams/MyProcess1.png").deploy();
         return ResultUtil.success("部署名称:" + deployment.getId());
+    }
+
+    //zip方式，POSTMAN部署流程定义
+    @PostMapping("/zipDeploy")
+    public Result zipDeploy(@RequestParam(value = "file") MultipartFile file) {
+
+        String fileName = file.getOriginalFilename();
+        try {
+            InputStream fileInputStream = file.getInputStream();
+            String extension = FilenameUtils.getExtension(fileName);
+            DeploymentBuilder deployment = repositoryService.createDeployment();
+            if (extension.equals("zip") || extension.equals("bar")) {
+                ZipInputStream zip = new ZipInputStream(fileInputStream);
+                deployment.addZipInputStream(zip);
+            } else {
+                deployment.addInputStream(fileName, fileInputStream);
+            }
+            deployment.deploy();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ResultUtil.success("部署名称:" + file.getOriginalFilename());
     }
 
     //查看流程图，根据部署记录ACT_GE_BYTEARRAY的DEPLOYMENT_ID_
