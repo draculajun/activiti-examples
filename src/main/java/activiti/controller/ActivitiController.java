@@ -4,6 +4,7 @@ import activiti.mapperdao.BlackListMapper;
 import activiti.pojo.Result;
 import activiti.pojo.ResultUtil;
 import org.activiti.engine.*;
+import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.util.List;
@@ -36,6 +36,9 @@ public class ActivitiController {
     @Autowired
     TaskService taskService;
 
+    @Autowired
+    HistoryService historyService;
+
     //部署流程定义
     //涉及表：
     // ACT_GE_BYTEARRAY(存放流程定义的XML和PNG);
@@ -46,7 +49,7 @@ public class ActivitiController {
         ProcessEngine processEngine = ProcessEngines.getDefaultProcessEngine();
         ProcessEngine engine = processEngine.getProcessEngineConfiguration().buildProcessEngine();
         Deployment deployment = repositoryService.createDeployment().addClasspathResource("diagrams/MyProcess1.bpmn").addClasspathResource("diagrams/MyProcess1.png").deploy();
-        return ResultUtil.success("部署名称:" + deployment.getName());
+        return ResultUtil.success("部署名称:" + deployment.getId());
     }
 
     //查看流程图，根据部署记录ACT_GE_BYTEARRAY的DEPLOYMENT_ID_
@@ -85,7 +88,7 @@ public class ActivitiController {
 
     //启动流程实例，参数myProcess=myProcess1
     //涉及表：
-    // ACT_RU_EXECUTION(流程实例);
+    // ACT_RU_EXECUTION(正在执行的执行对象表);
     // ACT_RU_IDENTITYLINK(下一任务);
     @GetMapping("/startProcessInstance/{myProcess}")
     public Result startProcessInstance(@PathVariable("myProcess") String myProcess) {
@@ -119,10 +122,23 @@ public class ActivitiController {
     // ACT_RU_TASK(当前任务);
     @GetMapping("/completeMyPersonalTask/{taskId}")
     public Result completeMyPersonalTask(@PathVariable("taskId") String taskId) {
-        taskService.complete(taskId);
-        return ResultUtil.success("任务完成:" + taskId);
+        try {
+            taskService.complete(taskId);
+            return ResultUtil.success("任务完成:" + taskId);
+        } catch (Exception e) {
+            return ResultUtil.error(500, "任务无法完成");
+        }
     }
 
-
-
+    //查询历史任务
+    // ACT_HI_ACTINST(所有历史任务);
+    @GetMapping("/historyTasks/")
+    public Result historyTasks() {
+        try {
+            List<HistoricActivityInstance> hisList = historyService.createHistoricActivityInstanceQuery().processInstanceId("5001").list();
+            return ResultUtil.success(hisList, "任务完成");
+        } catch (Exception e) {
+            return ResultUtil.error(500, "任务无法完成");
+        }
+    }
 }
