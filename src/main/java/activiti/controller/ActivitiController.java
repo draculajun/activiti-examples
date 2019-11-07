@@ -176,6 +176,12 @@ public class ActivitiController {
         }
     }
 
+    @GetMapping("/deleteProcessDefinition/{id}")
+    public Result deleteProcessDefinition(@PathVariable(value = "id") String id) {
+        repositoryService.deleteDeployment(id, true);
+        return ResultUtil.success("删除部署:" + id + "完成");
+    }
+
     @GetMapping("/abcd")
     public Result test1() {
 

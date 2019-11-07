@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
   <process id="myProcess2" name="My process2" isExecutable="true">
+    <documentation>请假流程演示-动态表单</documentation>
     <startEvent id="startevent1" name="Start" activiti:initiator="applyUserid">
       <extensionElements>
         <activiti:formProperty id="startDate" name="请假开始日期" type="date" datePattern="yyyy-MM-dd" required="true"></activiti:formProperty>
@@ -10,9 +11,9 @@
     </startEvent>
     <userTask id="deptLeaderAudit" name="部门领导审批" activiti:candidateGroups="deptLeader">
       <extensionElements>
-        <activiti:formProperty id="startDate" name="请假开始日期" type="date" variable="${startdate}" datePattern="yyyy-MM-dd"></activiti:formProperty>
-        <activiti:formProperty id="endDate" name="请假结束日期" type="date" variable="${endDate}" datePattern="yyyy-MM-dd"></activiti:formProperty>
-        <activiti:formProperty id="reason" name="请假原因" type="string" variable="${reason}"></activiti:formProperty>
+        <activiti:formProperty id="startDate" name="请假开始日期" type="date" datePattern="yyyy-MM-dd" writable="false"></activiti:formProperty>
+        <activiti:formProperty id="endDate" name="请假结束日期" type="date" datePattern="yyyy-MM-dd" writable="false"></activiti:formProperty>
+        <activiti:formProperty id="reason" name="请假原因" type="string" writable="false"></activiti:formProperty>
         <activiti:formProperty id="deptLeaderApprove" name="审批意见" type="enum" required="true">
           <activiti:value id="true" name="同意"></activiti:value>
           <activiti:value id="false" name="拒绝"></activiti:value>
@@ -22,7 +23,17 @@
     <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="deptLeaderAudit"></sequenceFlow>
     <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
     <sequenceFlow id="flow2" sourceRef="deptLeaderAudit" targetRef="exclusivegateway1"></sequenceFlow>
-    <userTask id="hrAudit" name="人事审批" activiti:candidateGroups="hr"></userTask>
+    <userTask id="hrAudit" name="人事审批" activiti:candidateGroups="hr">
+      <extensionElements>
+        <activiti:formProperty id="startDate" name="请假开始日期" type="date" datePattern="yyyy-MM-dd" writable="false"></activiti:formProperty>
+        <activiti:formProperty id="endDate" name="请假结束日期" type="date" datePattern="yyyy-MM-dd" writable="false"></activiti:formProperty>
+        <activiti:formProperty id="reason" name="请假原因" type="string" writable="false"></activiti:formProperty>
+        <activiti:formProperty id="hrApproved" name="审批意见" type="enum" required="true">
+          <activiti:value id="true" name="同意"></activiti:value>
+          <activiti:value id="false" name="拒绝"></activiti:value>
+        </activiti:formProperty>
+      </extensionElements>
+    </userTask>
     <sequenceFlow id="flow3" name="同意" sourceRef="exclusivegateway1" targetRef="hrAudit">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[deptLeaderApproved == 'true']]></conditionExpression>
     </sequenceFlow>
@@ -30,7 +41,7 @@
       <extensionElements>
         <activiti:formProperty id="startDate" name="请假开始日期" type="date" datePattern="yyyy-MM-dd" required="true"></activiti:formProperty>
         <activiti:formProperty id="endDate" name="请假结束日期" type="date" datePattern="yyyy-MM-dd" required="true"></activiti:formProperty>
-        <activiti:formProperty id="reason" name="请假原因" type="string" expression="value=${reason}" required="true"></activiti:formProperty>
+        <activiti:formProperty id="reason" name="请假原因" type="string" required="true"></activiti:formProperty>
         <activiti:formProperty id="reApply" name="重新申请" type="enum" required="true">
           <activiti:value id="true" name="重新申请"></activiti:value>
           <activiti:value id="false" name="取消申请"></activiti:value>
@@ -51,10 +62,10 @@
       </extensionElements>
     </userTask>
     <sequenceFlow id="flow6" name="同意" sourceRef="exclusivegateway2" targetRef="reportBack">
-      <conditionExpression xsi:type="tFormalExpression"><![CDATA[hrApprove == true]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[hrApprove == 'true']]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow7" name="拒绝" sourceRef="exclusivegateway2" targetRef="modifyApply">
-      <conditionExpression xsi:type="tFormalExpression"><![CDATA[hrApprove == false]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[hrApprove == 'false']]></conditionExpression>
     </sequenceFlow>
     <endEvent id="endevent1" name="End"></endEvent>
     <sequenceFlow id="flow8" name="销假" sourceRef="reportBack" targetRef="endevent1">
@@ -68,10 +79,10 @@
       <extensionElements>
         <activiti:executionListener event="take" expression="${execution.setVariable('result', 'canceled')}"></activiti:executionListener>
       </extensionElements>
-      <conditionExpression xsi:type="tFormalExpression"><![CDATA[reApply=='false']]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[reApply == 'false']]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow11" name="重新申请" sourceRef="exclusivegateway3" targetRef="deptLeaderAudit">
-      <conditionExpression xsi:type="tFormalExpression"><![CDATA[reApply=='true']]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[reApply == 'true']]></conditionExpression>
     </sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess2">
@@ -115,14 +126,14 @@
         <omgdi:waypoint x="570.0" y="208.0"></omgdi:waypoint>
         <omgdi:waypoint x="634.0" y="208.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="16.0" width="100.0" x="579.0" y="188.0"></omgdc:Bounds>
+          <omgdc:Bounds height="16.0" width="22.0" x="579.0" y="188.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
         <omgdi:waypoint x="550.0" y="228.0"></omgdi:waypoint>
         <omgdi:waypoint x="550.0" y="280.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="16.0" width="100.0" x="560.0" y="249.0"></omgdc:Bounds>
+          <omgdc:Bounds height="16.0" width="22.0" x="560.0" y="249.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
@@ -133,7 +144,7 @@
         <omgdi:waypoint x="840.0" y="208.0"></omgdi:waypoint>
         <omgdi:waypoint x="920.0" y="208.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="16.0" width="100.0" x="840.0" y="208.0"></omgdc:Bounds>
+          <omgdc:Bounds height="16.0" width="22.0" x="840.0" y="208.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
@@ -141,7 +152,7 @@
         <omgdi:waypoint x="819.0" y="307.0"></omgdi:waypoint>
         <omgdi:waypoint x="603.0" y="307.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="16.0" width="100.0" x="772.0" y="309.0"></omgdc:Bounds>
+          <omgdc:Bounds height="16.0" width="22.0" x="772.0" y="309.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
