@@ -7,6 +7,7 @@ import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.apache.commons.io.FileUtils;
@@ -17,7 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
@@ -35,10 +40,16 @@ public class ActivitiController {
     RuntimeService runtimeService;
 
     @Autowired
+    IdentityService identityService;
+
+    @Autowired
     TaskService taskService;
 
     @Autowired
     HistoryService historyService;
+
+    @Autowired
+    FormService formService;
 
     //部署流程定义
     //涉及表：
@@ -155,7 +166,7 @@ public class ActivitiController {
 
     //查询历史任务
     // ACT_HI_ACTINST(所有历史任务);
-    @GetMapping("/historyTasks/")
+    @GetMapping("/historyTasks")
     public Result historyTasks() {
         try {
             List<HistoricActivityInstance> hisList = historyService.createHistoricActivityInstanceQuery().processInstanceId("5001").list();
@@ -163,5 +174,35 @@ public class ActivitiController {
         } catch (Exception e) {
             return ResultUtil.error(500, "任务无法完成");
         }
+    }
+
+    @GetMapping("/abcd")
+    public Result test1() {
+
+        String currentUserId = "abc";
+        identityService.setAuthenticatedUserId(currentUserId);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate now = LocalDate.now();
+
+        //启动流程
+        ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionKey("myProcess2").singleResult();
+        Map<String, String> variables = new HashMap<>();
+        variables.put("startDate", formatter.format(now));
+        variables.put("endDate", formatter.format(now.plusMonths(1)));
+        variables.put("reason", "休假测试");
+        ProcessInstance processInstance = formService.submitStartFormData(processDefinition.getId(), variables);
+
+        //部门领导审批通过
+        Task deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
+        variables.put("deptLeaderApprove", "true");
+        formService.submitTaskFormData(deptLeaderTask.getId(), variables);
+
+        //人事审批通过
+        deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
+        System.out.println(deptLeaderTask);
+
+
+        return ResultUtil.success(null, "任务完成");
     }
 }
