@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,15 +177,33 @@ public class ActivitiController {
         }
     }
 
+    //删除部署
     @GetMapping("/deleteProcessDefinition/{id}")
     public Result deleteProcessDefinition(@PathVariable(value = "id") String id) {
         repositoryService.deleteDeployment(id, true);
         return ResultUtil.success("删除部署:" + id + "完成");
     }
 
-    @GetMapping("/abcd")
-    public Result test1() {
+    //查询某人的任务列表
+    @GetMapping("/userTasks/{username}")
+    public Result userTasks(@PathVariable(value = "username") String username) {
+        List<Task> allTasks = new ArrayList<>();
+        //读取直接分配给当前人或已签收的任务
+        List<Task> doingTasks = taskService.createTaskQuery().taskAssignee(username).list();
+        //等待签收的任务
+        List<Task> waitingClaimTasks = taskService.createTaskQuery().taskCandidateUser(username).list();
+        allTasks.addAll(doingTasks);
+        allTasks.addAll(waitingClaimTasks);
 
+        //简化方法（简化上面的合集）
+        allTasks = taskService.createTaskQuery().taskCandidateOrAssigned(username).list();
+
+        return ResultUtil.success("用户 " + username + " 的任务列表：" + allTasks);
+    }
+
+    //formService启动流程，加入流程参数
+    @GetMapping("/formService")
+    public Result formService() {
         String currentUserId = "abc";
         identityService.setAuthenticatedUserId(currentUserId);
 
@@ -192,22 +211,28 @@ public class ActivitiController {
         LocalDate now = LocalDate.now();
 
         //启动流程
-        ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionKey("myProcess2").singleResult();
+//        ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionKey("leave").singleResult();
         Map<String, String> variables = new HashMap<>();
-        variables.put("startDate", formatter.format(now));
-        variables.put("endDate", formatter.format(now.plusMonths(1)));
-        variables.put("reason", "休假测试");
-        ProcessInstance processInstance = formService.submitStartFormData(processDefinition.getId(), variables);
+//        variables.put("startDate", formatter.format(now));
+//        variables.put("endDate", formatter.format(now.plusMonths(1)));
+//        variables.put("reason", "休假测试");
+//        ProcessInstance processInstance = formService.submitStartFormData(processDefinition.getId(), variables);
 
         //部门领导审批通过
-        Task deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
-        variables.put("deptLeaderApprove", "true");
-        formService.submitTaskFormData(deptLeaderTask.getId(), variables);
+//        Task deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
+//        variables = new HashMap<>();
+//        variables.put("deptLeaderApproved", "true");
+//        formService.submitTaskFormData(deptLeaderTask.getId(), variables);
 
         //人事审批通过
-        deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
-        System.out.println(deptLeaderTask);
+//        Task hrTask = taskService.createTaskQuery().taskCandidateGroup("hr").singleResult();
+//        variables.put("hrApproved", "true");
+//        formService.submitTaskFormData(hrTask.getId(), variables);
 
+        //销假
+//        Task reportBackTask = taskService.createTaskQuery().taskAssignee(currentUserId).singleResult();
+//        variables.put("reportBackDate", formatter.format(now));
+//        formService.submitTaskFormData(reportBackTask.getId(), variables);
 
         return ResultUtil.success(null, "任务完成");
     }
