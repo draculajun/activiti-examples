@@ -4,6 +4,8 @@ import activiti.mapperdao.BlackListMapper;
 import activiti.pojo.Result;
 import activiti.pojo.ResultUtil;
 import org.activiti.engine.*;
+import org.activiti.engine.form.FormProperty;
+import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
@@ -204,35 +206,55 @@ public class ActivitiController {
     //formService启动流程，加入流程参数
     @GetMapping("/formService")
     public Result formService() {
+        //---------------------------------------------------------------------------------------------------------
+        //设置流程发起人
         String currentUserId = "abc";
         identityService.setAuthenticatedUserId(currentUserId);
-
+        //---------------------------------------------------------------------------------------------------------
+        //启动流程
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate now = LocalDate.now();
-
-        //启动流程
 //        ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery().processDefinitionKey("leave").singleResult();
         Map<String, String> variables = new HashMap<>();
 //        variables.put("startDate", formatter.format(now));
 //        variables.put("endDate", formatter.format(now.plusMonths(1)));
 //        variables.put("reason", "休假测试");
 //        ProcessInstance processInstance = formService.submitStartFormData(processDefinition.getId(), variables);
-
+        //---------------------------------------------------------------------------------------------------------
         //部门领导审批通过
 //        Task deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
 //        variables = new HashMap<>();
 //        variables.put("deptLeaderApproved", "true");
 //        formService.submitTaskFormData(deptLeaderTask.getId(), variables);
-
+        //模拟请求，过滤不可修改的流程参数并提交审核
+//        Map<String, String> reqMap = new HashMap<>();
+//        reqMap.put("startDate", "2019-10-10");
+//        reqMap.put("endDate", "2019-11-11");
+//        reqMap.put("reason", "reason");
+//        reqMap.put("deptLeaderApproved", "true");   //部门审批意见为isWritable
+//        Task deptLeaderTask = taskService.createTaskQuery().taskCandidateGroup("deptLeader").singleResult();
+//        TaskFormData taskFormData = formService.getTaskFormData(deptLeaderTask.getId());
+//        List<FormProperty> formProperties = taskFormData.getFormProperties();
+//        Map<String, String> formValues = new HashMap<>();
+//        formProperties.stream().forEach(e -> {
+//            if (e.isWritable()) {
+//                formValues.put(e.getId(), reqMap.get(e.getId()));
+//            }
+//        });
+//        formService.submitTaskFormData(deptLeaderTask.getId(), formValues);
+        //---------------------------------------------------------------------------------------------------------
         //人事审批通过
 //        Task hrTask = taskService.createTaskQuery().taskCandidateGroup("hr").singleResult();
 //        variables.put("hrApproved", "true");
 //        formService.submitTaskFormData(hrTask.getId(), variables);
-
+        //---------------------------------------------------------------------------------------------------------
         //销假
 //        Task reportBackTask = taskService.createTaskQuery().taskAssignee(currentUserId).singleResult();
 //        variables.put("reportBackDate", formatter.format(now));
 //        formService.submitTaskFormData(reportBackTask.getId(), variables);
+        //---------------------------------------------------------------------------------------------------------
+
+
 
         return ResultUtil.success(null, "任务完成");
     }
