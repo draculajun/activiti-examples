@@ -186,7 +186,7 @@ public class ActivitiController {
         return ResultUtil.success("删除部署:" + id + "完成");
     }
 
-    //查询某人的任务列表
+    //查询某人的任务列表（包括当前分配给他的以及等待签收的）
     @GetMapping("/userTasks/{username}")
     public Result userTasks(@PathVariable(value = "username") String username) {
         List<Task> allTasks = new ArrayList<>();
@@ -203,7 +203,14 @@ public class ActivitiController {
         return ResultUtil.success("用户 " + username + " 的任务列表：" + allTasks);
     }
 
-    //formService启动流程，加入流程参数
+    //查询候选组任务列表
+    @GetMapping("/candidateGroup/{candidateGroup}")
+    public Result candidateGroupTasks(@PathVariable(value = "candidateGroup") String candidateGroup) {
+        List<Task> tasks = taskService.createTaskQuery().taskCandidateGroup(candidateGroup).list();
+        return ResultUtil.success("候选组 " + candidateGroup + " 的任务列表：" + tasks);
+    }
+
+    //内置表单formService启动流程，加入流程参数
     @GetMapping("/formService")
     public Result formService() {
         //---------------------------------------------------------------------------------------------------------
