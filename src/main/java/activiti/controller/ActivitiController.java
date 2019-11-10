@@ -265,4 +265,10 @@ public class ActivitiController {
 
         return ResultUtil.success(null, "任务完成");
     }
+
+    @GetMapping("/test")
+    public Result test(){
+        return ResultUtil.success(null, "tested");
+    }
+
 }
