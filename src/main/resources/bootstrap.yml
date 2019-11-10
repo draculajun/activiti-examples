@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: activiti
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        service-id: SPRINGCLOUDCONFIG
+      profile: dev
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:10000/eureka/
