@@ -1,5 +1,6 @@
 package activiti.controller;
 
+import activiti.api.DemoApi;
 import activiti.mapperdao.BlackListMapper;
 import activiti.pojo.Result;
 import activiti.pojo.ResultUtil;
@@ -32,6 +33,9 @@ import java.util.zip.ZipInputStream;
 @RestController
 @RequestMapping("activiti")
 public class ActivitiController {
+
+    @Autowired
+    DemoApi demoApi;
 
     @Autowired
     BlackListMapper blackListMapper;
@@ -268,7 +272,14 @@ public class ActivitiController {
 
     @GetMapping("/test")
     public Result test(){
-        return ResultUtil.success(null, "tested");
+        return ResultUtil.success(null, "Activiti is OK");
+    }
+
+
+    @GetMapping("/feignTest")
+    public Result feignTest(){
+        Result result = demoApi.getDemo();
+        return ResultUtil.success(null, result.getMessage());
     }
 
 }
