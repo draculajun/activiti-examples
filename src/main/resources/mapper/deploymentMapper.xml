@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="activiti.mapperdao.DeploymentMapper">
+
+    <resultMap id="BaseMapResult" type="activiti.pojo.Deployment">
+        <id property="id" column="ID_"/>
+        <result property="name" column="NAME_"/>
+        <result property="category" column="CATEGORY_"/>
+        <result property="deploytime" column="DEPLOY_TIME_"/>
+    </resultMap>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseMapResult">
+        SELECT
+            ID_,
+            NAME_,
+            CATEGORY_,
+            DEPLOY_TIME_
+        FROM ACT_RE_DEPLOYMENT
+        WHERE 1=1 AND ID_ = #{1}
+    </select>
+
+</mapper>
