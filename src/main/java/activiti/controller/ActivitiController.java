@@ -1,6 +1,7 @@
 package activiti.controller;
 
 import activiti.api.DemoApi;
+import activiti.filter.UserContextHolder;
 import activiti.mapperdao.BlackListMapper;
 import activiti.pojo.Result;
 import activiti.pojo.ResultUtil;
@@ -271,6 +272,7 @@ public class ActivitiController {
 
     @GetMapping("/test")
     public Result test(){
+        System.out.println(UserContextHolder.getContext().getAuthToken());
         return ResultUtil.success(null, "Activiti is OK");
     }
 
